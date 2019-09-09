@@ -1,6 +1,7 @@
 import random
 import datetime
 import requests
+from bs4 import BeautifulSoup
 
 import yfinance as yf
 import globalconsts
