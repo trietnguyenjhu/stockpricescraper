@@ -68,7 +68,9 @@ def run(database, tickers, logger):
             time.sleep(random.random()*1)
             count += 1
 
-            if count%8 == 0: proxyPool = getProxyPool() # refresh proxy pool
+            if count%8 == 0: # batch delay
+                time.sleep(random.random()*20)
+                proxyPool = getProxyPool() # refresh proxy pool
 
 
 def getProxyPool():

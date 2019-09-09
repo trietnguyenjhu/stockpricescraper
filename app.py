@@ -13,6 +13,7 @@ import cli
 import setupdatabase
 import updateprices
 import globalconsts
+import exceptions
 
 
 def main():
