@@ -2,6 +2,8 @@ import random
 import datetime
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
+import time
 
 import yfinance as yf
 import globalconsts
@@ -18,6 +20,7 @@ def run(database, tickers):
     proxyPool = []
     for row in (proxyTable[proxyTable['Https']=='yes'].iterrows()):
         proxyPool.append(f"https://{row[1]['IP Address']}:{int(row[1]['Port'])}")
+    count = 0
 
     for ticker in tickers:
         # console log
@@ -26,7 +29,7 @@ def run(database, tickers):
               f'{now.hour:02.0f}:{now.minute:02.0f}:{now.second:02.0f} - ' +
               f'Downloading {ticker.strip().upper()} - {count}/{len(tickers)}')
 
-        data = yf.download(ticker, proxy={'https': random.choice(proxyPool)}).reset_index()
+        data = yf.download(ticker, progress=False, proxy={'https': random.choice(proxyPool)}).reset_index()
         selectQuery = \
             f"""
                 select company_id
@@ -54,3 +57,4 @@ def run(database, tickers):
 
         database.runSQL('exec sp_deleteDuplicatePrices', verify=True)
         time.sleep(random.random()*10)
+        count += 1
