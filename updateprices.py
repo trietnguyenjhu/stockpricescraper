@@ -10,7 +10,7 @@ import globalconsts
 
 
 
-def run(database, tickers):
+def run(database, tickers, logger):
     database.cursor.fast_executemany = True
 
     # proxy handling
@@ -29,7 +29,12 @@ def run(database, tickers):
               f'{now.hour:02.0f}:{now.minute:02.0f}:{now.second:02.0f} - ' +
               f'Downloading {ticker.strip().upper()} - {count}/{len(tickers)}')
 
-        data = yf.download(ticker, progress=False, proxy={'https': random.choice(proxyPool)}).reset_index()
+        try:
+            data = yf.download(ticker, progress=False, proxy={'https': random.choice(proxyPool)}).reset_index()
+        except requests.exceptions.SSLError as e: # invalid proxy
+            logger.logError(e)
+            continue # back to the beginning of the for loop
+
         selectQuery = \
             f"""
                 select company_id

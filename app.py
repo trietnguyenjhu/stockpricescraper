@@ -41,6 +41,7 @@ def main():
                     tickerList = datahandling.filterArray(tickerList, fArray)
             else:
                 raise exceptions.InvalidModeError()
+
             updateprices.run(database, tickerList)
 
 
