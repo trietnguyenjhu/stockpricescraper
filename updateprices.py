@@ -1,5 +1,9 @@
+import random
+import datetime
+
 import yfinance as yf
 import globalconsts
+
 
 
 def run(database, tickers):
@@ -14,6 +18,12 @@ def run(database, tickers):
         proxyPool.append(f"https://{row[1]['IP Address']}:{int(row[1]['Port'])}")
 
     for ticker in tickers:
+        # console log
+        now = datetime.datetime.now()
+        print(f'{now.month:02.0f}/{now.day:02.0f}/{now.year:02.0f} ' +
+              f'{now.hour:02.0f}:{now.minute:02.0f}:{now.second:02.0f} - ' +
+              f'Downloading {ticker.strip().upper()} - {count}/{len(tickers)}')
+
         data = yf.download(ticker, proxy={'https': random.choice(proxyPool)}).reset_index()
         selectQuery = \
             f"""
