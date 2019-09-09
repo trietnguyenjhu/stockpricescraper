@@ -85,7 +85,12 @@ def update(database, proxy, ticker):
         data = data[[
             'company_id', 'Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']]
         params = list(data.itertuples(False, None))
-        database.cursor.executemany(baseInsert, params)
-        database.commit()
+        try:
+            database.cursor.executemany(baseInsert, params)
+            database.commit()
+        except pyodbc.ProgrammingError as e:
+            print('Faulty params:')
+            print(params)
+            raise e
 
         database.runSQL('exec sp_deleteDuplicatePrices', verify=True)
