@@ -6,8 +6,10 @@ import yfinance as yf
 
 from datsup import settings
 from datsup import datahandling
+from datsup import log
 from dbadapter import adapter
 
+import cli
 import setupdatabase
 import updateprices
 
@@ -15,15 +17,15 @@ import updateprices
 def main():
 
     args = cli.getArgs()
-    logger = log.LogManager('insiderScraper.log')
-    credentials = settings.readConfig('settings.ini')
+    logger = log.LogManager('error.log')
+    credentials = settings.readConfig('settings.ini')['auth']
 
     with adapter.SQLServer(credentials) as database:
         if args.create_table and args.confirm_reset:  # setup mode
             setupdatabase.run(database)
         else:  # update modes
             if args.tickers:
-                tickerList = args.update_tickers
+                tickerList = args.tickers
             elif args.auto_update:
                 tickerList = database.getData(
                     'select distinct ticker from insiderTrading.Company').ticker.values
@@ -36,9 +38,9 @@ def main():
                                 on p.company_id = c.company_id
                         """).ticker.values
                     tickerList = datahandling.filterArray(tickerList, fArray)
+            else:
+                raise exceptions.InvalidModeError()
             updateprices.run(database, tickerList)
-        else:
-            raise exceptions.InvalidModeError()
 
 
 if __name__ == "__main__":

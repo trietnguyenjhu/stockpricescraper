@@ -20,6 +20,12 @@ def getArgs():
     )
 
     parser.add_argument(
+        '-t',
+        '--tickers',
+        nargs='+',
+        help='scrape based on a list of tickers')
+
+    parser.add_argument(
         '-a',
         '--auto-update',
         action='store_true',

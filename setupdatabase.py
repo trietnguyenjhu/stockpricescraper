@@ -12,11 +12,11 @@ def run(database):
     database.createTable(
         table=f'{globalconsts.SCHEMA}Price',
         dataVars=dict(
-            date='date',
-            open='float',
-            high='float',
-            low='float',
-            close='float',
+            day='date',
+            openPrice='float',
+            highPrice='float',
+            lowPrice='float',
+            closingPrice='float',
             adjClose='float',
             volume='float',
             ),
@@ -35,7 +35,9 @@ def createStoredProcedures(database):
             where price_id in (
                 select max(price_id)
                 from {globalconsts.SCHEMA}Price
-                group by date, open, high, low, close, adjClose, volume, company_id
+                group by day, openPrice, highPrice, lowPrice, closingPrice,
+                    adjClose, volume, company_id
+                having count(1) > 1
             )
         """
     database.runSQL(sql, verify=True)
