@@ -1,5 +1,6 @@
 import random
 import datetime
+import requests
 
 import yfinance as yf
 import globalconsts
