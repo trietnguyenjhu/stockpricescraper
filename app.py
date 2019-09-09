@@ -12,6 +12,7 @@ from dbadapter import adapter
 import cli
 import setupdatabase
 import updateprices
+import globalconsts
 
 
 def main():
@@ -33,7 +34,7 @@ def main():
                     fArray = database.getData(
                         f"""
                             select distinct c.ticker 
-                            from {globalconsts}Price p
+                            from {globalconsts.SCHEMA}Price p
                             inner join insiderTrading.Company c 
                                 on p.company_id = c.company_id
                         """).ticker.values
