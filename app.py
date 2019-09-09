@@ -41,8 +41,11 @@ def main():
                     tickerList = datahandling.filterArray(tickerList, fArray)
             else:
                 raise exceptions.InvalidModeError()
-
-            updateprices.run(database, tickerList, logger)
+            
+            try:
+                updateprices.run(database, tickerList, logger)
+            except exceptions.ProxyError as e:
+                logger.logError(e)
 
 
 if __name__ == "__main__":

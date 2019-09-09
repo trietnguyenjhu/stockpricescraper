@@ -4,3 +4,7 @@ class NoDataError(Exception):
 
 class InvalidModeError(Exception):
     pass
+
+
+class ProxyError(Exception):
+    pass
