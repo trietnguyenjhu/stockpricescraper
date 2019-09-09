@@ -58,34 +58,34 @@ def getProxyPool():
 
 def update(database, proxy, ticker):
     """Update data"""
-        try:
-            data = yf.download(ticker, progress=False, proxy=proxy).reset_index()
-        except (requests.exceptions.SSLError, requests.exceptions.ProxyError) as e: # invalid proxy
-            raise exceptions.ProxyError(f'Unable to use proxy - {proxy}')
-        else:
-            selectQuery = \
-                f"""
-                    select company_id
-                    from insiderTrading.Company
-                    where ticker = '{ticker.upper()}'
-                """
-            insertQuery = \
-                """ 
-                """ # boiler plate, will not insert if ticker isn't in database
-            company_id = database.queryId(selectQuery, insertQuery)
+    try:
+        data = yf.download(ticker, progress=False, proxy=proxy).reset_index()
+    except (requests.exceptions.SSLError, requests.exceptions.ProxyError) as e: # invalid proxy
+        raise exceptions.ProxyError(f'Unable to use proxy - {proxy}')
+    else:
+        selectQuery = \
+            f"""
+                select company_id
+                from insiderTrading.Company
+                where ticker = '{ticker.upper()}'
+            """
+        insertQuery = \
+            """ 
+            """ # boiler plate, will not insert if ticker isn't in database
+        company_id = database.queryId(selectQuery, insertQuery)
 
-            data['company_id'] = company_id
+        data['company_id'] = company_id
 
-            baseInsert = \
-                f"""
-                    insert into {globalconsts.SCHEMA}Price
-                    (company_id, day, openPrice, highPrice, lowPrice, closingPrice, adjClose, volume)
-                    values (?, ?, ?, ?, ?, ?, ?, ?)
-                """
-            data = data[[
-                'company_id', 'Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']]
-            params = list(data.itertuples(False, None))
-            database.cursor.executemany(baseInsert, params)
-            database.commit()
+        baseInsert = \
+            f"""
+                insert into {globalconsts.SCHEMA}Price
+                (company_id, day, openPrice, highPrice, lowPrice, closingPrice, adjClose, volume)
+                values (?, ?, ?, ?, ?, ?, ?, ?)
+            """
+        data = data[[
+            'company_id', 'Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']]
+        params = list(data.itertuples(False, None))
+        database.cursor.executemany(baseInsert, params)
+        database.commit()
 
-            database.runSQL('exec sp_deleteDuplicatePrices', verify=True)
+        database.runSQL('exec sp_deleteDuplicatePrices', verify=True)
