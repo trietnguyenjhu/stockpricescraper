@@ -4,8 +4,17 @@ import globalconsts
 
 def run(database, tickers):
     database.cursor.fast_executemany = True
+
+    # proxy handling
+    page = requests.get('https://www.sslproxies.org/')
+    soup = BeautifulSoup(page.text, 'lxml')
+    proxyTable = pd.read_html(str(soup.find_all('table', {'id': 'proxylisttable'})))[0]
+    proxyPool = []
+    for row in (proxyTable[proxyTable['Https']=='yes'].iterrows()):
+        proxyPool.append(f"https://{row[1]['IP Address']}:{int(row[1]['Port'])}")
+
     for ticker in tickers:
-        data = yf.download(ticker).reset_index()
+        data = yf.download(ticker, proxy={'https': random.choice(proxyPool)}).reset_index()
         selectQuery = \
             f"""
                 select company_id
@@ -13,8 +22,7 @@ def run(database, tickers):
                 where ticker = '{ticker.upper()}'
             """
         insertQuery = \
-            """
-
+            """ 
             """ # boiler plate, will not insert if ticker isn't in database
         company_id = database.queryId(selectQuery, insertQuery)
 
@@ -33,3 +41,4 @@ def run(database, tickers):
         database.commit()
 
         database.runSQL('exec sp_deleteDuplicatePrices', verify=True)
+        time.sleep(random.random()*10)
