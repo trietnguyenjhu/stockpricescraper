@@ -30,7 +30,7 @@ def main():
                 tickerList = database.getData(
                     'select distinct ticker from insiderTrading.Company').ticker.values
                 if args.filter_db:
-                    fArray = data.getData(
+                    fArray = database.getData(
                         f"""
                             select distinct c.ticker 
                             from {globalconsts}Price p
