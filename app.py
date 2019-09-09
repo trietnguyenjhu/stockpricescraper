@@ -42,7 +42,7 @@ def main():
             else:
                 raise exceptions.InvalidModeError()
 
-            updateprices.run(database, tickerList)
+            updateprices.run(database, tickerList, logger)
 
 
 if __name__ == "__main__":
