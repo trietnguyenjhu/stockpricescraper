@@ -6,9 +6,11 @@ import pandas as pd
 import time
 
 import yfinance as yf
-import globalconsts
 
 from datsup import fileio
+
+import exceptions
+import globalconsts
 
 
 def run(database, tickers, logger):
@@ -33,6 +35,7 @@ def run(database, tickers, logger):
                 flagIterTicker = False # don't redownload if original download was successful
             except (requests.exceptions.SSLError, requests.exceptions.ProxyError) as e: # invalid proxy
                 raise exceptions.ProxyError(f'Unable to use proxy - {proxy}')
+                logger.logError(e)
                 fileio.append('proxyerror.log', proxy)
                 continue # back to the beginning of the while loop
 
@@ -62,7 +65,7 @@ def run(database, tickers, logger):
             database.commit()
 
             database.runSQL('exec sp_deleteDuplicatePrices', verify=True)
-            time.sleep(random.random()*10)
+            time.sleep(random.random()*1)
             count += 1
 
             if count%8 == 0: proxyPool = getProxyPool() # refresh proxy pool
