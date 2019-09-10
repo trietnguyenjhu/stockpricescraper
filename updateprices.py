@@ -75,7 +75,10 @@ def update(database, proxy, ticker):
     except (
         requests.exceptions.SSLError,
         requests.exceptions.ProxyError,
-        urllib3.exceptions.MaxRetryError) as e: # invalid proxy
+        urllib3.exceptions.MaxRetryError,
+        requests.exceptions.ChunkedEncodingError,
+        urllib3.exceptions.ProtocolError,
+        ) as e: # invalid proxy
         raise exceptions.ProxyError(f'Unable to use proxy - {proxy}')
     else:
         selectQuery = \
