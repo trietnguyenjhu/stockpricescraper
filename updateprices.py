@@ -20,6 +20,7 @@ def run(database, tickers, logger):
     proxyPool = getProxyPool()
     count = 0
 
+    random.shuffle(tickers)
     for ticker in tickers:
         # console log
         now = datetime.datetime.now()
