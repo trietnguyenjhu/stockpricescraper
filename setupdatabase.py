@@ -18,7 +18,7 @@ def run(database):
             lowPrice='float',
             closingPrice='float',
             adjClose='float',
-            volume='float',
+            volume='int',
             ),
         foreignKeys=dict(
             company_id='insiderTrading.Company'

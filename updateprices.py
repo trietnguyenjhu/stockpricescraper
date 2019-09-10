@@ -6,8 +6,10 @@ import pandas as pd
 import time
 import yfinance as yf
 import pyodbc
+import urllib3
 
 from datsup import fileio
+from datsup import nanhandler
 
 import exceptions
 import globalconsts
@@ -32,10 +34,13 @@ def run(database, tickers, logger):
             proxy = {'https': random.choice(proxyPool)}
             try:
                 update(database, proxy, ticker)
-                flagIterTicker = False  # break out of while loop if download success
             except exceptions.ProxyError as e:
                 logger.logError(e)
-                iterTickerCount += 1
+                iterTickerCount += 1 # 10 retries
+                if iterTickerCount >=10: flagIterTicker = False
+            else:
+                flagIterTicker = False  # break out of while loop if download success
+
             time.sleep(random.random()*1) # iter delay
 
         count += 1
@@ -60,7 +65,10 @@ def update(database, proxy, ticker):
     """Update data"""
     try:
         data = yf.download(ticker, progress=False, proxy=proxy).reset_index()
-    except (requests.exceptions.SSLError, requests.exceptions.ProxyError) as e: # invalid proxy
+    except (
+        requests.exceptions.SSLError,
+        requests.exceptions.ProxyError,
+        urllib3.exceptions.MaxRetryError) as e: # invalid proxy
         raise exceptions.ProxyError(f'Unable to use proxy - {proxy}')
     else:
         selectQuery = \
@@ -82,8 +90,19 @@ def update(database, proxy, ticker):
                 (company_id, day, openPrice, highPrice, lowPrice, closingPrice, adjClose, volume)
                 values (?, ?, ?, ?, ?, ?, ?, ?)
             """
+
+        data = nanhandler.removeRows(data)        
+        data.Open = data.Open.map(lambda x: float(x))
+        data.High = data.High.map(lambda x: float(x))
+        data.Low = data.Low.map(lambda x: float(x))
+        data.Close = data.Close.map(lambda x: float(x))
+        data['Adj Close'] = data['Adj Close'].map(lambda x: float(x))
+        data.Volume = data.Volume.map(lambda x: int(x))
+
+        # processing
         data = data[[
             'company_id', 'Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']]
+
         params = list(data.itertuples(False, None))
         try:
             database.cursor.executemany(baseInsert, params)
