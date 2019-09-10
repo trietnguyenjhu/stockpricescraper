@@ -59,7 +59,7 @@ def run(database, tickers, logger):
 def getProxyPool():
     """Generate a list of https proxies from https://www.sslproxies.org/"""
     # proxy handling
-    page = requests.get('https://www.sslproxies.org/')
+    page = requests.get('https://www.us-proxy.org/')
     soup = BeautifulSoup(page.text, 'lxml')
     proxyTable = pd.read_html(str(soup.find_all('table', {'id': 'proxylisttable'})))[0]
     proxyPool = []
