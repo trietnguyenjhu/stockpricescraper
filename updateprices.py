@@ -4,8 +4,8 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
-
 import yfinance as yf
+import pyodbc
 
 from datsup import fileio
 
