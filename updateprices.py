@@ -31,10 +31,16 @@ def run(database, tickers, logger):
         iterTickerCount = 0
 
         while flagIterTicker:
-            proxy = {'https': random.choice(proxyPool)}
+
+            # renew proxy if all popped from last iter
+            if len(proxyPool) == 0: proxyPool = getProxyPool()
+            proxyPath = random.choice(proxyPool)
+            proxy = {'https': proxyPath}
+
             try:
                 update(database, proxy, ticker)
             except exceptions.ProxyError as e:
+                proxyPool.pop(proxyPool.index(proxyPath)) # remove faulty proxy from pool
                 logger.logError(e)
                 iterTickerCount += 1 # 10 retries
                 if iterTickerCount >=10: flagIterTicker = False
