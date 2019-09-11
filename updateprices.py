@@ -94,7 +94,7 @@ def update(database, proxy, tickers):
                     f'{now.hour:02.0f}:{now.minute:02.0f}:{now.second:02.0f} - ' +
                     f'Updating {ticker.strip().upper()} - {count}/{len(postDownloadTickers)}')
 
-            data = bulkData[ticker]
+            data = bulkData[ticker].reset_index()
             selectQuery = \
                 f"""
                     select company_id
