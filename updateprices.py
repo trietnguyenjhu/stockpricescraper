@@ -79,7 +79,10 @@ def update(database, proxy, tickerSubset, batch: int, batches: int):
     """Update data"""
     try:
         tickers = tickerSubset if len(tickerSubset) == 1 else ' '.join(tickerSubset)
-        bulkData = yf.download(tickers, progress=True, proxy=proxy)
+        if globalconsts.PROXY:
+            bulkData = yf.download(tickers, progress=True, proxy=proxy)
+        else:
+            bulkData = yf.download(tickers, progress=True)            
     except (
         requests.exceptions.SSLError,
         requests.exceptions.ProxyError,
