@@ -28,10 +28,10 @@ def main():
         else:  # update modes
             if args.tickers:
                 tickerList = args.tickers
-            elif args.auto_update:
+            elif args.auto_update: # -a
                 tickerList = database.getData(
                     'select distinct ticker from insiderTrading.Company').ticker.values
-                if args.filter_db:
+                if args.filter_db: # -f
                     fArray = database.getData(
                         f"""
                             select distinct c.ticker 
