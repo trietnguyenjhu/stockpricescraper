@@ -33,7 +33,7 @@ def run(database, tickers, logger):
     for tickerSubset in datahandling.splitIterableEvenly(tickers, batchSize):
         
         log.timestampPrintToConsole(
-            f'Downloading batch {batch}/{batches} - {tickerSubset}')
+            f'Downloading batch {batch}/{batches} - {sorted(tickerSubset)}')
         flagIterTicker = True
         iterTickerCount = 0
 
@@ -43,7 +43,7 @@ def run(database, tickers, logger):
             
             fArray = pd.read_csv('badproxies.csv').values
             proxyPool = datahandling.filterArray(proxyPool, fArray)
-            proxyPool = list([proxyPool]) # coerce to list for pop()
+            proxyPool = list(proxyPool) # coerce to list for pop()
 
             proxyPath = random.choice(proxyPool)
             proxy = {'https': proxyPath}
