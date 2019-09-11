@@ -23,14 +23,15 @@ def run(database, tickers, logger):
     proxyPool = getProxyPool()
 
     random.shuffle(tickers)
-    batchCount = 0
-    batchSize = 100
+    batchCount = 1
+    batchSize = 50
+    batches = int(len(tickers)/batchSize)+1
 
     # split list of tickers in batches of 100s
     for tickerSubset in datahandling.splitIterableEvenly(tickers, batchSize):
         
         log.timestampPrintToConsole(
-            f'Downloading batch {batchCount}/{int(len(tickers)/batchSize)+1}')
+            f'Downloading batch {batchCount}/{batches}')
         tickerSubset = ' '.join(tickerSubset)
         flagIterTicker = True
         iterTickerCount = 0
@@ -42,17 +43,14 @@ def run(database, tickers, logger):
             proxy = {'https': proxyPath}
 
             try:
-                update(database, proxy, tickerSubset)
+                update(database, proxy, tickerSubset, batch, batches)
             except exceptions.ProxyError as e:
                 proxyPool.pop(proxyPool.index(proxyPath)) # remove faulty proxy from pool
                 logger.logError(e)
-                # iterTickerCount += 1 # 10 retries
-                # if iterTickerCount >=10: flagIterTicker = False
                 if len(proxyPool) == 0: flagIterTicker = False
                 continue
             else:
                 flagIterTicker = False  # break out of while loop if download success
-            
             batchCount += 1
 
 
@@ -70,7 +68,7 @@ def getProxyPool():
     return proxyPool
 
 
-def update(database, proxy, tickers):
+def update(database, proxy, tickers , batch: int, batchTotal: int):
     """Update data"""
     try:
         bulkData = yf.download(tickers, progress=True, proxy=proxy)
@@ -92,9 +90,8 @@ def update(database, proxy, tickers):
         for ticker in postDownloadTickers:
 
             now = datetime.datetime.now()
-            print(f'{now.month:02.0f}/{now.day:02.0f}/{now.year:02.0f} ' +
-                    f'{now.hour:02.0f}:{now.minute:02.0f}:{now.second:02.0f} - ' +
-                    f'Updating {ticker.strip().upper()} - {count}/{len(postDownloadTickers)}')
+            log.timestampPrintToConsole(
+                f'Batch {batch}/{batches} - Updating {ticker.strip().upper()} - {count}/{len(postDownloadTickers)}')
 
             data = bulkData[ticker].reset_index()
             selectQuery = \
