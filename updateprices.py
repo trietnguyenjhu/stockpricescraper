@@ -7,6 +7,7 @@ import time
 import yfinance as yf
 import pyodbc
 import urllib3
+import numpy as np
 
 from datsup import fileio
 from datsup import nanhandler
