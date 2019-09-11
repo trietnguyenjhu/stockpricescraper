@@ -47,7 +47,7 @@ def run(database, tickers, logger):
             except exceptions.ProxyError as e:
                 proxyPool.pop(proxyPool.index(proxyPath)) # remove faulty proxy from pool
                 logger.logError(e)
-                if len(proxyPool) == 0: flagIterTicker = False
+                if len(proxyPool) == 0: flagIterTicker = False # give up on batch if every proxies fail
                 continue
             else:
                 flagIterTicker = False  # break out of while loop if download success
@@ -68,7 +68,7 @@ def getProxyPool():
     return proxyPool
 
 
-def update(database, proxy, tickers , batch: int, batchTotal: int):
+def update(database, proxy, tickers , batch: int, batches: int):
     """Update data"""
     try:
         bulkData = yf.download(tickers, progress=True, proxy=proxy)
