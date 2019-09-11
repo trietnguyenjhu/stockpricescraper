@@ -46,8 +46,10 @@ def run(database, tickers, logger):
             except exceptions.ProxyError as e:
                 proxyPool.pop(proxyPool.index(proxyPath)) # remove faulty proxy from pool
                 logger.logError(e)
-                iterTickerCount += 1 # 10 retries
-                if iterTickerCount >=10: flagIterTicker = False
+                # iterTickerCount += 1 # 10 retries
+                # if iterTickerCount >=10: flagIterTicker = False
+                if len(proxyPool) == 0: flagIterTicker = False
+                continue
             else:
                 flagIterTicker = False  # break out of while loop if download success
             
