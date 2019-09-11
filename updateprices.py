@@ -10,6 +10,8 @@ import urllib3
 
 from datsup import fileio
 from datsup import nanhandler
+from datsup import datahandling
+from datsup import log
 
 import exceptions
 import globalconsts
@@ -18,41 +20,37 @@ import globalconsts
 def run(database, tickers, logger):
     database.cursor.fast_executemany = True
     proxyPool = getProxyPool()
-    count = 0
 
     random.shuffle(tickers)
+    batchCount = 0
+    batchSize = 100
 
-    tickers = ' '.join(tickers)
+    # split list of tickers in batches of 100s
+    for tickerSubset in datahandling.splitIterableEvenly(tickers, batchSize):
+        
+        log.timestampPrintToConsole(
+            f'Downloading batch {batchCount}/{int(len(tickers)/batchSize)+1}')
+        tickerSubset = ' '.join(tickerSubset)
+        flagIterTicker = True
+        iterTickerCount = 0
 
-    # for ticker in tickers:
-    # console log
-    
+        while flagIterTicker:
+            # renew proxy if all popped from last iter
+            if len(proxyPool) == 0: proxyPool = getProxyPool()
+            proxyPath = random.choice(proxyPool)
+            proxy = {'https': proxyPath}
 
-    flagIterTicker = True
-    iterTickerCount = 0
-
-    while flagIterTicker:
-
-        # renew proxy if all popped from last iter
-        if len(proxyPool) == 0: proxyPool = getProxyPool()
-        proxyPath = random.choice(proxyPool)
-        proxy = {'https': proxyPath}
-
-        try:
-            update(database, proxy, tickers)
-        except exceptions.ProxyError as e:
-            proxyPool.pop(proxyPool.index(proxyPath)) # remove faulty proxy from pool
-            logger.logError(e)
-            iterTickerCount += 1 # 10 retries
-            if iterTickerCount >=10: flagIterTicker = False
-        else:
-            flagIterTicker = False  # break out of while loop if download success
-
-    #     time.sleep(random.random()*1) # iter delay
-
-    # if count%8 == 0: # batch delay
-    #     time.sleep(random.random()*20)
-    #     proxyPool = getProxyPool() # refresh proxy pool
+            try:
+                update(database, proxy, tickerSubset)
+            except exceptions.ProxyError as e:
+                proxyPool.pop(proxyPool.index(proxyPath)) # remove faulty proxy from pool
+                logger.logError(e)
+                iterTickerCount += 1 # 10 retries
+                if iterTickerCount >=10: flagIterTicker = False
+            else:
+                flagIterTicker = False  # break out of while loop if download success
+            
+            batchCount += 1
 
 
 def getProxyPool():
@@ -79,6 +77,8 @@ def update(database, proxy, tickers):
         urllib3.exceptions.MaxRetryError,
         requests.exceptions.ChunkedEncodingError,
         urllib3.exceptions.ProtocolError,
+        urllib3.exceptions.NewConnectionError,
+        TimeoutError,
         ) as e: # invalid proxy
         raise exceptions.ProxyError(f'Unable to use proxy - {proxy}')
     else:
