@@ -8,6 +8,8 @@ import yfinance as yf
 import pyodbc
 import urllib3
 import numpy as np
+import ssl
+import http
 
 from datsup import fileio
 from datsup import nanhandler
@@ -23,22 +25,25 @@ def run(database, tickers, logger):
     proxyPool = getProxyPool()
 
     random.shuffle(tickers)
-    batch = 1
+    batch = 0
     batchSize = 50
-    batches = int(len(tickers)/batchSize)+1
+    batches = int(len(tickers)/batchSize)
 
     # split list of tickers in batches of 100s
     for tickerSubset in datahandling.splitIterableEvenly(tickers, batchSize):
         
         log.timestampPrintToConsole(
-            f'Downloading batch {batch}/{batches}')
-        tickerSubset = ' '.join(tickerSubset)
+            f'Downloading batch {batch}/{batches} - {tickerSubset}')
         flagIterTicker = True
         iterTickerCount = 0
 
         while flagIterTicker:
             # renew proxy if all popped from last iter
             if len(proxyPool) == 0: proxyPool = getProxyPool()
+            
+            fArray = pd.read_csv('badproxies.csv').values
+            proxyPool = datahandling.filterArray(proxyPool, fArray)
+
             proxyPath = random.choice(proxyPool)
             proxy = {'https': proxyPath}
 
@@ -47,6 +52,7 @@ def run(database, tickers, logger):
             except exceptions.ProxyError as e:
                 proxyPool.pop(proxyPool.index(proxyPath)) # remove faulty proxy from pool
                 logger.logError(e)
+                fileio.appendLine('badproxies.csv', proxyPath)
                 if len(proxyPool) == 0: flagIterTicker = False # give up on batch if every proxies fail
                 continue
             else:
@@ -68,9 +74,10 @@ def getProxyPool():
     return proxyPool
 
 
-def update(database, proxy, tickers , batch: int, batches: int):
+def update(database, proxy, tickerSubset, batch: int, batches: int):
     """Update data"""
     try:
+        tickers = tickerSubset if len(tickerSubset) == 1 else ' '.join(tickerSubset)
         bulkData = yf.download(tickers, progress=True, proxy=proxy)
     except (
         requests.exceptions.SSLError,
@@ -80,20 +87,31 @@ def update(database, proxy, tickers , batch: int, batches: int):
         urllib3.exceptions.ProtocolError,
         urllib3.exceptions.NewConnectionError,
         TimeoutError,
+        ssl.SSLCertVerificationError,
+        http.client.RemoteDisconnected
         ) as e: # invalid proxy
         raise exceptions.ProxyError(f'Unable to use proxy - {proxy}')
     else:
-        bulkData = bulkData.swaplevel(axis=1)
-        postDownloadTickers = np.unique([x[0] for x in bulkData.columns])
+        if len(tickers) > 1:
+            bulkData = bulkData.swaplevel(axis=1)
+            # downloaded tickers check
+            postDownloadTickers = np.unique([x[0] for x in bulkData.columns])
+        else:
+            postDownloadTickers = tickerSubset
         
         count = 0
         for ticker in postDownloadTickers:
 
             now = datetime.datetime.now()
             log.timestampPrintToConsole(
-                f'Batch {batch}/{batches} - Updating {ticker.strip().upper()} - {count}/{len(postDownloadTickers)}')
+                f'Batch {batch}/{batches} - Updating {ticker.strip().upper()} {count}/{len(postDownloadTickers)}')
 
-            data = bulkData[ticker].reset_index()
+            # data subsetting - bulk download handling
+            if len(tickers) > 1:
+                data = bulkData[ticker].reset_index()
+            else:
+                data = bulkData.reset_index()
+
             selectQuery = \
                 f"""
                     select company_id
@@ -136,3 +154,4 @@ def update(database, proxy, tickers , batch: int, batches: int):
 
             database.runSQL('exec sp_deleteDuplicatePrices', verify=True)
             count += 1
+
