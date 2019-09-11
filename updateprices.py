@@ -43,6 +43,7 @@ def run(database, tickers, logger):
             
             fArray = pd.read_csv('badproxies.csv').values
             proxyPool = datahandling.filterArray(proxyPool, fArray)
+            proxyPool = list([proxyPool]) # coerce to list for pop()
 
             proxyPath = random.choice(proxyPool)
             proxy = {'https': proxyPath}
