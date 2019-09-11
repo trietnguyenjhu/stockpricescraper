@@ -23,7 +23,7 @@ def run(database, tickers, logger):
     proxyPool = getProxyPool()
 
     random.shuffle(tickers)
-    batchCount = 1
+    batch = 1
     batchSize = 50
     batches = int(len(tickers)/batchSize)+1
 
@@ -31,7 +31,7 @@ def run(database, tickers, logger):
     for tickerSubset in datahandling.splitIterableEvenly(tickers, batchSize):
         
         log.timestampPrintToConsole(
-            f'Downloading batch {batchCount}/{batches}')
+            f'Downloading batch {batch}/{batches}')
         tickerSubset = ' '.join(tickerSubset)
         flagIterTicker = True
         iterTickerCount = 0
@@ -51,7 +51,7 @@ def run(database, tickers, logger):
                 continue
             else:
                 flagIterTicker = False  # break out of while loop if download success
-            batchCount += 1
+            batch += 1
 
 
 def getProxyPool():
