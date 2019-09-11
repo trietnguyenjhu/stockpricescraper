@@ -108,7 +108,7 @@ def update(database, proxy, tickerSubset, batch: int, batches: int):
 
             now = datetime.datetime.now()
             log.timestampPrintToConsole(
-                f'Proxy: {globalconsts.PROXY} - Batch {batch}/{batches} - Updating {ticker.strip().upper()} {count}/{len(postDownloadTickers)}')
+                f'Proxy={globalconsts.PROXY} - Batch {batch}/{batches} - Updating {ticker.strip().upper()} {count}/{len(postDownloadTickers)}')
 
             # data subsetting - bulk download handling
             if len(tickers) > 1:
