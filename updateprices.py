@@ -57,7 +57,7 @@ def run(database, tickers, logger):
                 if len(proxyPool) == 0: flagIterTicker = False # give up on batch if every proxies fail
                 continue
             except exceptions.NoDataError as e: # unavailable ticker
-                if len(proxyPool) == 0: flagIterTicker = False # TODO handle faulty tickers
+                flagIterTicker = False # TODO handle faulty tickers
                 continue
             else:
                 flagIterTicker = False  # break out of while loop if download is successful
