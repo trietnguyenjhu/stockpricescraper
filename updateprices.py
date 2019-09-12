@@ -56,8 +56,8 @@ def run(database, tickers, logger):
                 fileio.appendLine('badproxies.csv', proxyPath)
                 if len(proxyPool) == 0: flagIterTicker = False # give up on batch if every proxies fail
                 continue
-            except ValueError as e: # unavailable ticker
-                if len(proxyPool) == 0: flagIterTicker = False # TODO handle faultyy tickers
+            except exceptions.NoDataError as e: # unavailable ticker
+                if len(proxyPool) == 0: flagIterTicker = False # TODO handle faulty tickers
                 continue
             else:
                 flagIterTicker = False  # break out of while loop if download is successful
