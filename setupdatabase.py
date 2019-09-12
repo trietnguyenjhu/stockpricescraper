@@ -1,7 +1,7 @@
 import globalconsts
 
 def run(database):
-    """Drop all tables and recreate"""
+    """Reinstanciate table stockPrice.Price"""
 
     # drop tables
     dropTables = ['Price']
@@ -38,6 +38,6 @@ def createStoredProcedures(database):
                 group by day, openPrice, highPrice, lowPrice, closingPrice,
                     adjClose, volume, company_id
                 having count(1) > 1
-            )
+            );
         """
     database.runSQL(sql, verify=True)

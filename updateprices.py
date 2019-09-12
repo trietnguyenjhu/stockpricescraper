@@ -26,10 +26,10 @@ def run(database, tickers, logger):
 
     random.shuffle(tickers)
     batch = 0
-    batchSize = 50
+    batchSize = globalconsts.BATCH_SIZE
     batches = int(len(tickers)/batchSize)
 
-    # split list of tickers in batches of 100s
+    # split list of tickers in batches
     for tickerSubset in datahandling.splitIterableEvenly(tickers, batchSize):
         
         log.timestampPrintToConsole(
@@ -51,13 +51,16 @@ def run(database, tickers, logger):
             try:
                 update(database, proxy, tickerSubset, batch, batches)
             except exceptions.ProxyError as e:
-                proxyPool.pop(proxyPool.index(proxyPath)) # remove faulty proxy from pool
+                proxyPool.pop(proxyPool.index(proxyPath)) # remove faulty proxy\ies from pool
                 logger.logError(e)
                 fileio.appendLine('badproxies.csv', proxyPath)
                 if len(proxyPool) == 0: flagIterTicker = False # give up on batch if every proxies fail
                 continue
+            except ValueError as e: # unavailable ticker
+                if len(proxyPool) == 0: flagIterTicker = False # TODO handle faultyy tickers
+                continue
             else:
-                flagIterTicker = False  # break out of while loop if download success
+                flagIterTicker = False  # break out of while loop if download is successful
             batch += 1
 
 
@@ -95,6 +98,8 @@ def update(database, proxy, tickerSubset, batch: int, batches: int):
         http.client.RemoteDisconnected
         ) as e: # invalid proxy
         raise exceptions.ProxyError(f'Unable to use proxy - {proxy}')
+    except ValueError as e: # unavailable ticker
+        raise exceptions.NoDataError(f'Unable to download ticker from batch')
     else:
         if len(tickers) > 1:
             bulkData = bulkData.swaplevel(axis=1)

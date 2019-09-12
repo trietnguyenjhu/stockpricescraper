@@ -1,2 +1,3 @@
 SCHEMA = 'stockPrice.'
-PROXY = TRUE
+PROXY = False
+BATCH_SIZE = 50
