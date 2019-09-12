@@ -33,7 +33,7 @@ def run(database, tickers, logger):
     for tickerSubset in datahandling.splitIterableEvenly(tickers, batchSize):
         
         log.timestampPrintToConsole(
-            f'Downloading batch {batch}/{batches} - {sorted(tickerSubset)}')
+            f'Proxy={globalconsts.PROXY} - Downloading batch {batch}/{batches} - {sorted(tickerSubset)}')
         flagIterTicker = True
         iterTickerCount = 0
 
