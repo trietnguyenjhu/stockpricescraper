@@ -111,6 +111,7 @@ def update(database, proxy, tickerSubset, batch: int, batches: int):
         count = 0
         for ticker in postDownloadTickers:
 
+            ticker = ticker.upper()
             now = datetime.datetime.now()
             log.timestampPrintToConsole(
                 f'Proxy={globalconsts.PROXY} - Batch {batch}/{batches} - Updating {ticker.strip().upper()} {count}/{len(postDownloadTickers)}')
@@ -128,7 +129,11 @@ def update(database, proxy, tickerSubset, batch: int, batches: int):
                     where ticker = '{ticker.upper()}'
                 """
             insertQuery = \
-                """ 
+                f"""
+                    insert into {globalconsts.SCHEMA}Company (ticker)
+                    values (
+                        '{ticker}'
+                        )
                 """ # boiler plate, will not insert if ticker isn't in database
             company_id = database.queryId(selectQuery, insertQuery)
             data['company_id'] = company_id
