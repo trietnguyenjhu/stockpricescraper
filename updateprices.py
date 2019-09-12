@@ -130,7 +130,7 @@ def update(database, proxy, tickerSubset, batch: int, batches: int):
                 """
             insertQuery = \
                 f"""
-                    insert into {globalconsts.SCHEMA}Company (ticker)
+                    insert into insiderTrading.Company (ticker)
                     values (
                         '{ticker}'
                         )
